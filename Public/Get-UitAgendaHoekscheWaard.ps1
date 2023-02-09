@@ -9,11 +9,12 @@ function Get-UitAgendaHoekscheWaard
     | Select-Object -ExpandProperty HRef
     | Where-Object { $_ -Like 'https://www.visithw.nl/nl/uitagenda/*' }
     | ForEach-Object {
-        $Content = Invoke-WebRequest -Uri $_ | Select-Object -ExpandProperty Content
-        $Description = ($Content | pup '.item-details__long-description text{}' --plain | ForEach-Object { $_.Trim() } | Where-Object { $_ }) -join ' '
+        $Document = ConvertTo-HtmlDocument -Uri $_
+        $Description = $Document | Select-HtmlNode -CssSelector '.item-details__long-description' | Get-HtmlNodeText
 
-        $Content
-        | pup 'script[type] text{}' --plain
+        $Document
+        | Select-HtmlNode -CssSelector 'script[type]'
+        | Get-HtmlNodeText
         | ConvertFrom-Json
         | ForEach-Object {
             [PSCustomObject]@{
